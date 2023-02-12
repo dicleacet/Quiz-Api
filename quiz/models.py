@@ -11,11 +11,6 @@ class Question(models.Model):
         (4, _('Expert'))
     )
 
-    TYPE = (
-        (0, _('Multiple Choice')),
-        (1, _('True or False')),
-    )
-
     title = models.CharField(
         max_length=255, 
         verbose_name=_("Title")
@@ -35,11 +30,6 @@ class Question(models.Model):
     is_active = models.BooleanField(
         default=False, 
         verbose_name=_("Active Status")
-    )
-    question_type = models.IntegerField(
-        choices=TYPE,
-        default=0,
-        verbose_name=_("Question Type")
     )
     
     def __str__(self):
@@ -72,3 +62,25 @@ class Answer(models.Model):
 
     def __str__(self):
         return self.answer_text
+
+
+class QuestionMedia(models.Model):
+    question = models.ForeignKey(
+        Question,
+        related_name='question_media',
+        on_delete=models.DO_NOTHING,
+    )
+    media = models.FileField(
+        upload_to='question_media/',
+        null=False,
+        blank=False,
+        verbose_name=_("Question Media")
+    )
+
+    def __str__(self):
+        return self.media.name
+
+    class Meta:
+        verbose_name = _("Question Media")
+        verbose_name_plural = _("Question Media")
+        ordering = ['id']
