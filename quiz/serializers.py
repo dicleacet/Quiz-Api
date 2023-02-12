@@ -11,6 +11,7 @@ class ReadMediaSerializer(serializers.Serializer):
         return ReadMediaSerializer(**validated_data)
 
 class AnswerSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
     answer_text = serializers.CharField(max_length=255, required=True, allow_null=False, allow_blank=False)
     is_right = serializers.BooleanField(default=False)
 
@@ -62,22 +63,30 @@ class QuestionMediaSerializer(serializers.ModelSerializer):
         fields = ['id', 'question', 'media']
 
     def validate(self, attrs):
-        if attrs['media'].size > 10485760:
-            raise serializers.ValidationError("File size is too large")
         if attrs['media'].content_type not in ['image/jpeg', 'image/png', 'image/gif', 'video/mp4']:
             raise serializers.ValidationError("File type is not supported")
         return attrs
 
 
 
+class SolveQuestionSerializer(serializers.Serializer):
+    question = serializers.IntegerField(required=True, allow_null=False)
+    answer = serializers.IntegerField(required=True, allow_null=False)
 
-# class SolveQuestionSerializer(serializers.Serializer):
-#     answer = serializers.CharField(max_length=255, required=True, allow_null=False, allow_blank=False)
+    def validate(self, attrs):
+        question = Question.objects.filter(id=attrs['question']).first()
+        if not question:
+            raise serializers.ValidationError("Question does not exist")
+        answer = Answer.objects.filter(id=attrs['answer']).first()
+        if not answer:
+            raise serializers.ValidationError("Answer does not exist")
+        if question.id != answer.question.id:
+            raise serializers.ValidationError("Answer does not belong to question")
+        return attrs
 
-#     def create(self, validated_data):
-#         return SolveQuestionSerializer(**validated_data)
+    def create(self, validated_data):
+        return SolveQuestionSerializer(**validated_data)
 
-#     def update(self,validated_data):
-#         return SolveQuestionSerializer(**validated_data)
-
+    def update(self,validated_data):
+        return SolveQuestionSerializer(**validated_data)
 
